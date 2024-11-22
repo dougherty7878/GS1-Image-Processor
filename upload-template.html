@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GS1 Image Processor</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 500px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            text-align: center; 
+        }
+        #upload-form {
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="upload-form">
+        <h1>GS1 Image Processor</h1>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".tiff,.tif" required>
+            <button type="submit">Process Image</button>
+        </form>
+    </div>
+</body>
+</html>
