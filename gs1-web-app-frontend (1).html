@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GS1 Image Processor</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        #drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 20px;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+        #drop-area.highlight { border-color: purple; }
+        #progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            margin-top: 20px;
+        }
+        #progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <h1>GS1 Image Processor</h1>
+    <div id="drop-area">
+        <input type="file" id="fileElem" multiple accept="image/*" onchange="handleFiles(this.files)">
+        <label class="button" for="fileElem">Select Files</label>
+        <p>or drag and drop files here</p>
+    </div>
+    <div id="progress-bar">
+        <div id="progress"></div>
+    </div>
+    <div id="file-list"></div>
+    <div id="download-links"></div>
+
+    <script>
+        let dropArea = document.getElementById('drop-area');
+        let fileList = document.getElementById('file-list');
+        let downloadLinks = document.getElementById('download-links');
+        let progressBar = document.getElementById('progress');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight() {
+            dropArea.classList.add('highlight');
+        }
+
+        function unhighlight() {
+            dropArea.classList.remove('highlight');
+        }
+
+        function handleDrop(e) {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            fileList.innerHTML = '';
+            downloadLinks.innerHTML = '';
+            progressBar.style.width = '0%';
+            
+            let formData = new FormData();
+            for (let file of files) {
+                formData.append('files', file);
+                let p = document.createElement('p');
+                p.textContent = `${file.name} - ${(file.size/1024/1024).toFixed(2)} MB`;
+                fileList.appendChild(p);
+            }
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                progressBar.style.width = '100%';
+                if (data.processed_files) {
+                    data.processed_files.forEach(filename => {
+                        let a = document.createElement('a');
+                        a.href = `/download/${filename}`;
+                        a.textContent = `Download ${filename}`;
+                        a.download = true;
+                        downloadLinks.appendChild(a);
+                        downloadLinks.appendChild(document.createElement('br'));
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                progressBar.style.width = '0%';
+            });
+        }
+    </script>
+</body>
+</html>
